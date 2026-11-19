@@ -1,9 +1,13 @@
 
 # UNAD - Programacion 213023
 # Fase 4 - Sistema Software FJ
-# Servicio especializado: Alquiler de equipos
 
 from servicio import Servicio
+from excepciones import (
+    ServicioNoDisponibleError,
+    CalculoInvalidoError
+)
+from registro_logs import registrar_error
 
 
 class AlquilerEquipo(Servicio):
@@ -12,7 +16,9 @@ class AlquilerEquipo(Servicio):
         super().__init__(codigo, nombre, precio_base)
 
         if not isinstance(tipo_equipo, str) or not tipo_equipo.strip():
-            raise ValueError("El tipo de equipo es obligatorio.")
+            raise ValueError(
+                "El tipo de equipo es obligatorio."
+            )
 
         self._tipo_equipo = tipo_equipo
 
@@ -20,14 +26,35 @@ class AlquilerEquipo(Servicio):
         if isinstance(duracion, bool) or not isinstance(
             duracion, (int, float)
         ) or duracion <= 0:
-            raise ValueError("La duracion debe ser mayor que cero.")
+            raise CalculoInvalidoError(
+                "La duracion debe ser mayor que cero."
+            )
 
         if not self.esta_disponible():
-            raise ValueError("El equipo no esta disponible.")
+            raise ServicioNoDisponibleError(
+                "El equipo no esta disponible."
+            )
 
     def calcular_costo(self, duracion):
-        self.validar_parametros(duracion)
-        return self._precio_base * duracion
+        try:
+            self.validar_parametros(duracion)
+            costo = self._precio_base * duracion
+
+            if costo <= 0:
+                raise CalculoInvalidoError(
+                    "El costo calculado no es valido."
+                )
+
+            return costo
+
+        except (
+            CalculoInvalidoError,
+            ServicioNoDisponibleError
+        ) as error:
+            registrar_error(
+                f"Error al calcular alquiler de equipo: {error}"
+            )
+            raise
 
     def describir_servicio(self):
         return (
