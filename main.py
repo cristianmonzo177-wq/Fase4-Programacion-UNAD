@@ -8,6 +8,7 @@ from reserva_sala import ReservaSala
 from alquiler_equipo import AlquilerEquipo
 from asesoria_especializada import AsesoriaEspecializada
 from reserva import Reserva
+from gestion_sistema import GestionSistema
 
 from excepciones import ErrorSistema
 from registro_logs import registrar_evento, registrar_error
@@ -21,9 +22,7 @@ def ejecutar_prueba(numero, descripcion, operacion):
 
     except (ErrorSistema, ValueError, TypeError) as error:
         print(f"Error controlado: {error}")
-        registrar_error(
-            f"Prueba {numero}: {error}"
-        )
+        registrar_error(f"Prueba {numero}: {error}")
 
     else:
         if resultado is not None:
@@ -44,9 +43,7 @@ def main():
 
     # Crear cliente y servicios
     cliente = Cliente(
-        "Ana Martinez",
-        "123456789",
-        "ana@correo.com"
+        "Ana Martinez", "123456789", "ana@correo.com"
     )
 
     sala = ReservaSala(
@@ -67,7 +64,7 @@ def main():
     reserva2 = Reserva("R002", cliente, equipo, 4)
     reserva3 = Reserva("R003", cliente, asesoria, 2)
 
-    # Operaciones exitosas
+    # Pruebas originales
     ejecutar_prueba(
         1, "Consultar cliente",
         cliente.mostrar_informacion
@@ -113,7 +110,6 @@ def main():
         reserva3.confirmar
     )
 
-    # Pruebas de errores controlados
     ejecutar_prueba(
         10, "Duracion negativa",
         lambda: sala.calcular_costo(-2)
@@ -131,8 +127,99 @@ def main():
         reserva1.confirmar
     )
 
+    # Pruebas de impuestos y descuentos
+    ejecutar_prueba(
+        13, "Costo normal de sala",
+        lambda: sala.calcular_costo_total(2)
+    )
+
+    ejecutar_prueba(
+        14, "Costo con impuesto del 19%",
+        lambda: sala.calcular_costo_total(
+            2, impuesto=19
+        )
+    )
+
+    ejecutar_prueba(
+        15, "Costo con descuento del 10%",
+        lambda: sala.calcular_costo_total(
+            2, descuento=10
+        )
+    )
+
+    ejecutar_prueba(
+        16, "Costo con impuesto y descuento",
+        lambda: sala.calcular_costo_total(
+            2, impuesto=19, descuento=10
+        )
+    )
+
+    # Gestion de listas internas
+    gestion = GestionSistema()
+
+    ejecutar_prueba(
+        17, "Agregar cliente a lista",
+        lambda: gestion.agregar_cliente(cliente)
+    )
+
+    ejecutar_prueba(
+        18, "Agregar servicio a lista",
+        lambda: gestion.agregar_servicio(sala)
+    )
+
+    ejecutar_prueba(
+        19, "Agregar reserva a lista",
+        lambda: gestion.agregar_reserva(reserva1)
+    )
+
+    ejecutar_prueba(
+        20, "Consultar totales del sistema",
+        gestion.obtener_totales
+    )
+
+    ejecutar_prueba(
+        21, "Listar clientes",
+        gestion.listar_clientes
+    )
+
+    ejecutar_prueba(
+        22, "Listar servicios",
+        gestion.listar_servicios
+    )
+
+    ejecutar_prueba(
+        23, "Listar reservas",
+        gestion.listar_reservas
+    )
+
+    # Pruebas adicionales de errores
+    ejecutar_prueba(
+        24, "Impuesto invalido",
+        lambda: sala.calcular_costo_total(
+            2, impuesto=150
+        )
+    )
+
+    ejecutar_prueba(
+        25, "Servicio no disponible",
+        lambda: probar_servicio_no_disponible(equipo)
+    )
+
+    ejecutar_prueba(
+        26, "Cancelar reserva",
+        reserva3.cancelar
+    )
+
     registrar_evento("Fin del sistema Software FJ.")
     print("\nTodas las pruebas fueron ejecutadas.")
+
+
+def probar_servicio_no_disponible(servicio):
+    servicio.cambiar_disponibilidad(False)
+    try:
+        return servicio.calcular_costo(2)
+    finally:
+        servicio.cambiar_disponibilidad(True)
 
 
 if __name__ == "__main__":
