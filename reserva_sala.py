@@ -1,9 +1,13 @@
 
 # UNAD - Programacion 213023
 # Fase 4 - Sistema Software FJ
-# Servicio especializado: Reserva de salas
 
 from servicio import Servicio
+from excepciones import (
+    ServicioNoDisponibleError,
+    CalculoInvalidoError
+)
+from registro_logs import registrar_error
 
 
 class ReservaSala(Servicio):
@@ -11,8 +15,12 @@ class ReservaSala(Servicio):
     def __init__(self, codigo, nombre, precio_base, capacidad):
         super().__init__(codigo, nombre, precio_base)
 
-        if isinstance(capacidad, bool) or not isinstance(capacidad, int) or capacidad <= 0:
-            raise ValueError("La capacidad debe ser un entero positivo.")
+        if isinstance(capacidad, bool) or not isinstance(
+            capacidad, int
+        ) or capacidad <= 0:
+            raise ValueError(
+                "La capacidad debe ser un entero positivo."
+            )
 
         self._capacidad = capacidad
 
@@ -20,14 +28,35 @@ class ReservaSala(Servicio):
         if isinstance(duracion, bool) or not isinstance(
             duracion, (int, float)
         ) or duracion <= 0:
-            raise ValueError("La duracion debe ser mayor que cero.")
+            raise CalculoInvalidoError(
+                "La duracion debe ser mayor que cero."
+            )
 
         if not self.esta_disponible():
-            raise ValueError("La sala no esta disponible.")
+            raise ServicioNoDisponibleError(
+                "La sala no esta disponible."
+            )
 
     def calcular_costo(self, duracion):
-        self.validar_parametros(duracion)
-        return self._precio_base * duracion
+        try:
+            self.validar_parametros(duracion)
+            costo = self._precio_base * duracion
+
+            if costo <= 0:
+                raise CalculoInvalidoError(
+                    "El costo calculado no es valido."
+                )
+
+            return costo
+
+        except (
+            CalculoInvalidoError,
+            ServicioNoDisponibleError
+        ) as error:
+            registrar_error(
+                f"Error al calcular reserva de sala: {error}"
+            )
+            raise
 
     def describir_servicio(self):
         return (
