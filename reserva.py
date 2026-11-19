@@ -1,6 +1,7 @@
 
 # UNAD - Programacion 213023
 # Fase 4 - Sistema Software FJ
+# Clase Reserva con excepciones y logs
 
 from cliente import Cliente
 from servicio import Servicio
@@ -18,6 +19,7 @@ from registro_logs import registrar_evento, registrar_error
 class Reserva:
 
     def __init__(self, codigo, cliente, servicio, duracion):
+
         if not isinstance(codigo, str) or not codigo.strip():
             raise ReservaInvalidaError(
                 "El codigo de reserva es obligatorio."
@@ -46,7 +48,9 @@ class Reserva:
         self.__duracion = duracion
         self.__estado = "Pendiente"
 
-        registrar_evento(f"Reserva {codigo} creada.")
+        registrar_evento(
+            f"Reserva {self.__codigo} creada correctamente."
+        )
 
     def confirmar(self):
         try:
@@ -60,19 +64,29 @@ class Reserva:
                     "El servicio no esta disponible."
                 )
 
-            self.__servicio.validar_parametros(self.__duracion)
+            self.__servicio.validar_parametros(
+                self.__duracion
+            )
 
-        except (OperacionNoPermitidaError,
-                ServicioNoDisponibleError,
-                ValueError) as error:
-            registrar_error(f"Error al confirmar reserva: {error}")
+        except (
+            OperacionNoPermitidaError,
+            ServicioNoDisponibleError,
+            CalculoInvalidoError,
+            ValueError
+        ) as error:
+
+            registrar_error(
+                f"Error al confirmar reserva: {error}"
+            )
             raise
 
         else:
             self.__estado = "Confirmada"
+
             registrar_evento(
                 f"Reserva {self.__codigo} confirmada."
             )
+
             return "Reserva confirmada correctamente."
 
     def cancelar(self):
@@ -80,13 +94,16 @@ class Reserva:
             error = OperacionNoPermitidaError(
                 "La reserva ya fue cancelada."
             )
+
             registrar_error(str(error))
             raise error
 
         self.__estado = "Cancelada"
+
         registrar_evento(
             f"Reserva {self.__codigo} cancelada."
         )
+
         return "Reserva cancelada correctamente."
 
     def procesar(self):
@@ -100,17 +117,26 @@ class Reserva:
                 self.__duracion
             )
 
-            if not isinstance(costo, (int, float)) or costo <= 0:
+            if (
+                isinstance(costo, bool)
+                or not isinstance(costo, (int, float))
+                or costo <= 0
+            ):
                 raise CalculoInvalidoError(
                     "El costo calculado no es valido."
                 )
 
-        except (ReservaInvalidaError,
-                CalculoInvalidoError,
-                ValueError) as error:
+        except (
+            ReservaInvalidaError,
+            CalculoInvalidoError,
+            ServicioNoDisponibleError,
+            ValueError
+        ) as error:
+
             registrar_error(
                 f"Error al procesar reserva: {error}"
             )
+
             return f"Error al procesar reserva: {error}"
 
         else:
