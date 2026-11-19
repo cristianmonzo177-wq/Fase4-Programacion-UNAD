@@ -19,14 +19,18 @@ class Cliente(Entidad):
         try:
             self.validar_datos()
 
-       except ClienteInvalidoError as error:
-    registrar_error(f"Error al registrar cliente: {error}")
-    raise ClienteInvalidoError(
-        "No fue posible registrar el cliente."
-    ) from error
+        except ClienteInvalidoError as error:
+            registrar_error(
+                f"Error al registrar cliente: {error}"
+            )
+            raise ClienteInvalidoError(
+                "No fue posible registrar el cliente."
+            ) from error
 
         else:
-            registrar_evento("Cliente registrado correctamente.")
+            registrar_evento(
+                "Cliente registrado correctamente."
+            )
 
     def validar_datos(self):
         if not isinstance(self.__nombre, str) or not self.__nombre.strip():
