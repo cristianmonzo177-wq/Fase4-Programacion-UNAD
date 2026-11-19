@@ -55,3 +55,4 @@ class Cliente(Entidad):
             f"Documento: {self.__documento}\n"
             f"Correo: {self.__correo}"
         )
+        
