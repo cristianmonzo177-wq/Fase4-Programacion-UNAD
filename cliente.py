@@ -3,6 +3,8 @@
 # Fase 4 - Sistema Software FJ
 
 from entidad import Entidad
+from excepciones import ClienteInvalidoError
+from registro_logs import registrar_error, registrar_evento
 
 
 class Cliente(Entidad):
@@ -14,17 +16,31 @@ class Cliente(Entidad):
         self.__documento = documento
         self.__correo = correo
 
-        self.validar_datos()
+        try:
+            self.validar_datos()
+
+        except ClienteInvalidoError as error:
+            registrar_error(f"Error al registrar cliente: {error}")
+            raise
+
+        else:
+            registrar_evento("Cliente registrado correctamente.")
 
     def validar_datos(self):
         if not isinstance(self.__nombre, str) or not self.__nombre.strip():
-            raise ValueError("El nombre no puede estar vacio.")
+            raise ClienteInvalidoError(
+                "El nombre no puede estar vacio."
+            )
 
         if not isinstance(self.__documento, str) or not self.__documento.isdigit():
-            raise ValueError("El documento debe contener solo numeros.")
+            raise ClienteInvalidoError(
+                "El documento debe contener solo numeros."
+            )
 
         if not isinstance(self.__correo, str) or "@" not in self.__correo:
-            raise ValueError("El correo electronico no es valido.")
+            raise ClienteInvalidoError(
+                "El correo electronico no es valido."
+            )
 
     def obtener_nombre(self):
         return self.__nombre
