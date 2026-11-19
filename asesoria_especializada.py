@@ -1,9 +1,13 @@
 
 # UNAD - Programacion 213023
 # Fase 4 - Sistema Software FJ
-# Servicio especializado: Asesoria
 
 from servicio import Servicio
+from excepciones import (
+    ServicioNoDisponibleError,
+    CalculoInvalidoError
+)
+from registro_logs import registrar_error
 
 
 class AsesoriaEspecializada(Servicio):
@@ -12,7 +16,9 @@ class AsesoriaEspecializada(Servicio):
         super().__init__(codigo, nombre, precio_base)
 
         if not isinstance(especialidad, str) or not especialidad.strip():
-            raise ValueError("La especialidad es obligatoria.")
+            raise ValueError(
+                "La especialidad es obligatoria."
+            )
 
         self._especialidad = especialidad
 
@@ -20,14 +26,35 @@ class AsesoriaEspecializada(Servicio):
         if isinstance(duracion, bool) or not isinstance(
             duracion, (int, float)
         ) or duracion <= 0:
-            raise ValueError("La duracion debe ser mayor que cero.")
+            raise CalculoInvalidoError(
+                "La duracion debe ser mayor que cero."
+            )
 
         if not self.esta_disponible():
-            raise ValueError("La asesoria no esta disponible.")
+            raise ServicioNoDisponibleError(
+                "La asesoria no esta disponible."
+            )
 
     def calcular_costo(self, duracion):
-        self.validar_parametros(duracion)
-        return self._precio_base * duracion
+        try:
+            self.validar_parametros(duracion)
+            costo = self._precio_base * duracion
+
+            if costo <= 0:
+                raise CalculoInvalidoError(
+                    "El costo calculado no es valido."
+                )
+
+            return costo
+
+        except (
+            CalculoInvalidoError,
+            ServicioNoDisponibleError
+        ) as error:
+            registrar_error(
+                f"Error al calcular asesoria: {error}"
+            )
+            raise
 
     def describir_servicio(self):
         return (
